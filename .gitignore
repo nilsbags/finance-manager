@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.mypy_cache/
+.pytest_cache/
+
+# Local database / private financial data — never commit this
+data/*.db
+data/*.sqlite
+data/*.sqlite3
+
+# CSV files (e.g. real bank statements) — never commit these.
+# The fake example file is force-tracked below so the project stays usable.
+*.csv
+!sample_data/transactions.csv
+
+# Streamlit
+.streamlit/secrets.toml
+
+# OS
+.DS_Store

@@ -1,0 +1,5 @@
+# Core app dependencies (SQLite ships with the Python standard library).
+# Requires Python 3.12+ (uses PEP 695 `type` statement and `X | None` unions).
+streamlit>=1.50
+pandas>=2.2
+plotly>=6.0

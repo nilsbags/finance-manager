@@ -341,4 +341,78 @@ STARTER_RULES: list[tuple[str, str, str]] = [
     ("fielmann", "Health & Fitness", "Healthcare"),
     # Connectivity
     ("saily", "Bills & Utilities", "Phone & Internet"),
+    # --- More easy assignments from observed statements --------------------
+    # Supermarkets / groceries
+    ("rewe", "Food & Drink", "Groceries"),
+    ("penny", "Food & Drink", "Groceries"),
+    ("trafik", "Food & Drink", "Groceries"),
+    ("chocolat", "Food & Drink", "Groceries"),
+    # Cafés / restaurants (spellings the existing rules miss)
+    ("caffe", "Food & Drink", "Restaurants & Cafés"),
+    ("kaffee", "Food & Drink", "Restaurants & Cafés"),
+    ("pizzeria", "Food & Drink", "Fast Food"),
+    ("schnitzel", "Food & Drink", "Restaurants & Cafés"),
+    ("plachutta", "Food & Drink", "Restaurants & Cafés"),
+    # Drugstore / pharmacy / health
+    ("rossmann", "Health & Fitness", "Drugstore & Pharmacy"),
+    ("mueller wien", "Health & Fitness", "Drugstore & Pharmacy"),
+    ("pearle", "Health & Fitness", "Healthcare"),
+    ("whoop", "Health & Fitness", "Sports & Recreation"),
+    # Transport
+    ("united airlines", "Transport", "Flights"),
+    ("garage", "Transport", "Parking"),
+    ("matrica", "Transport", "Tolls"),
+    ("mol ", "Transport", "Fuel"),
+    ("oeamtc", "Transport", "Car Wash & Maintenance"),
+    ("öamtc", "Transport", "Car Wash & Maintenance"),
+    # Phone & internet
+    ("t mobile", "Bills & Utilities", "Phone & Internet"),
+    ("postpaid", "Bills & Utilities", "Phone & Internet"),
+    # Shopping
+    ("nkd", "Shopping", "Clothing"),
+    # Entertainment / events
+    ("stadthalle", "Entertainment", "Events & Tickets"),
+    # --- Named food spots (observed restaurants / snack bars) --------------
+    # NB: no bare "king" rule on purpose — it would match "parking"/"booking".
+    # "Noodle king" is covered by the "noodle" pattern below.
+    ("goldies", "Food & Drink", "Fast Food"),
+    ("damak", "Food & Drink", "Fast Food"),
+    ("turkis", "Food & Drink", "Fast Food"),
+    ("noodle", "Food & Drink", "Restaurants & Cafés"),
+    ("rinderwahn", "Food & Drink", "Restaurants & Cafés"),
+    ("saloon", "Food & Drink", "Restaurants & Cafés"),
+    # --- High-confidence well-known brands ---------------------------------
+    # Supermarkets / convenience
+    ("carrefour", "Food & Drink", "Groceries"),
+    ("edeka", "Food & Drink", "Groceries"),
+    ("wundermart", "Food & Drink", "Groceries"),
+    # Fast food chains
+    ("shake shack", "Food & Drink", "Fast Food"),
+    ("in n out", "Food & Drink", "Fast Food"),
+    ("burgerista", "Food & Drink", "Fast Food"),
+    # Café / bakery chains
+    ("le pain quotidien", "Food & Drink", "Restaurants & Cafés"),
+    # Drugstore / pharmacy
+    ("duane reade", "Health & Fitness", "Drugstore & Pharmacy"),
+    # Retail
+    ("media markt", "Shopping", "Electronics"),
+    ("massimo dutti", "Shopping", "Clothing"),
+    ("vinted", "Shopping", "Clothing"),
+    ("ebay", "Shopping", "Online Shopping"),
+    ("miniso", "Shopping", "General"),
+    ("tedi", "Shopping", "General"),
+    # Parking operators
+    ("wipark", "Transport", "Parking"),
+    ("contipark", "Transport", "Parking"),
+    ("apcoa", "Transport", "Parking"),
+    # Fuel
+    ("enoc", "Transport", "Fuel"),
+    # Trains
+    ("db reisezentrum", "Transport", "Trains"),
+    # Hotels / travel
+    ("booking", "Travel", "Hotels & Lodging"),
+    ("hyatt", "Travel", "Hotels & Lodging"),
+    ("arlo soho", "Travel", "Hotels & Lodging"),
+    # Travel eSIM / connectivity
+    ("holafly", "Bills & Utilities", "Phone & Internet"),
 ]

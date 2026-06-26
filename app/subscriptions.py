@@ -9,6 +9,12 @@ keeps the groups that look like a subscription:
 * with **consistent amounts** (coefficient of variation below ``max_amount_cv``),
   which weeds out variable spend like restaurants or ride-hailing.
 
+Only monthly (or longer) cadences are considered subscriptions: any merchant
+that recurs faster than monthly — weekly, biweekly, … — is rejected, even when
+it falls in a subscription-type category. The one exception is an explicit name
+match (e.g. "Claude ai subscription"): a name that literally says "subscription"
+is trusted and counted regardless of cadence, even bursty same-week charges.
+
 This is intentionally simple and explainable — no external services.
 """
 
@@ -30,6 +36,15 @@ SUBSCRIPTION_SUBCATEGORIES = {
     "Streaming",
     "Phone & Internet",
 }
+
+# Merchant names containing one of these words are treated as a subscription
+# signal too — e.g. "Claude Subscription" — even outside the categories above.
+SUBSCRIPTION_NAME_KEYWORDS = ("subscription",)
+
+
+def _name_signals_subscription(merchant_key: str) -> bool:
+    """True if the (normalised) merchant name itself says it's a subscription."""
+    return any(kw in merchant_key for kw in SUBSCRIPTION_NAME_KEYWORDS)
 
 
 def normalize_merchant(description: str) -> str:
@@ -62,12 +77,15 @@ def detect(
 
     A merchant qualifies if it recurs (``>= min_occurrences``) and EITHER:
 
-    * it shows a roughly monthly cadence with consistent amounts (the cadence
-      heuristic), OR
-    * (when ``include_category_matches``) its category is inherently a
-      subscription (see :data:`SUBSCRIPTION_SUBCATEGORIES`).
+    * (when ``include_category_matches``) its name says it's a subscription
+      (see :data:`SUBSCRIPTION_NAME_KEYWORDS`, e.g. "Claude ai subscription") —
+      this trusted signal counts regardless of cadence, OR
+    * it is not faster than monthly AND it either shows a roughly monthly
+      cadence with consistent amounts, or (when ``include_category_matches``)
+      sits in an inherently subscription category (see
+      :data:`SUBSCRIPTION_SUBCATEGORIES`).
 
-    A ``confidence`` of *High* is assigned to subscription-category merchants
+    A ``confidence`` of *High* is assigned to subscription-signalled merchants
     and near-constant amounts; everything else is *Medium*. Columns:
     merchant, category, subcategory, currency, typical_amount, occurrences,
     median_gap_days, amount_cv, first_seen, last_seen, active, confidence.
@@ -85,7 +103,7 @@ def detect(
     reference_date = exp["date"].max()
 
     rows: list[dict] = []
-    for (_, currency), group in exp.groupby(["merchant_key", "currency"]):
+    for (merchant_key, currency), group in exp.groupby(["merchant_key", "currency"]):
         if len(group) < min_occurrences:
             continue
 
@@ -99,15 +117,32 @@ def detect(
         subcategory = group["subcategory"].mode().iat[0] or ""
 
         is_sub_category = subcategory in SUBSCRIPTION_SUBCATEGORIES
+        is_sub_name = _name_signals_subscription(merchant_key)
+        is_sub_signal = is_sub_category or is_sub_name
         has_monthly_cadence = (
             (min_gap_days <= median_gap <= max_gap_days) and cv <= max_amount_cv
         )
+        sub_monthly = (not gaps.empty) and (median_gap < min_gap_days)
 
-        if not has_monthly_cadence and not (include_category_matches and is_sub_category):
+        # An explicit name match (e.g. "Claude ai subscription") is a strong,
+        # user-trusted signal: count it regardless of cadence — even when the
+        # charges land in a tight burst. Otherwise enforce "monthly or longer":
+        # anything faster than monthly (weekly, biweekly, …) is not a
+        # subscription, even in a subscription-type category.
+        if include_category_matches and is_sub_name:
+            qualifies = True
+        elif sub_monthly:
+            qualifies = False
+        else:
+            qualifies = has_monthly_cadence or (
+                include_category_matches and is_sub_category
+            )
+
+        if not qualifies:
             continue
 
         last_seen = group["date"].max()
-        confidence = "High" if (is_sub_category or cv <= 0.15) else "Medium"
+        confidence = "High" if (is_sub_signal or cv <= 0.15) else "Medium"
         rows.append(
             {
                 "merchant": group["description"].mode().iat[0],

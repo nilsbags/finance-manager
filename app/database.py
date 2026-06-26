@@ -6,6 +6,7 @@ through a context manager, which keeps things simple and safe under
 Streamlit's re-run / multi-thread execution model.
 """
 
+import json
 import os
 import sqlite3
 from collections.abc import Iterable, Iterator
@@ -118,6 +119,41 @@ def get_meta(key: str) -> str | None:
 def set_meta(key: str, value: str) -> None:
     """Persist a small key/value setting."""
     _set_meta(key, value)
+
+
+_BALANCES_KEY = "account_balances"
+
+
+def get_account_balances() -> list[dict]:
+    """Return the most recent known balance per account, as stored on import.
+
+    Each item has ``account``, ``currency``, ``balance`` and ``as_of`` keys.
+    Returns an empty list when nothing has been imported with a balance column.
+    """
+    raw = _get_meta(_BALANCES_KEY)
+    if not raw:
+        return []
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        return []
+    return data if isinstance(data, list) else []
+
+
+def update_account_balances(balances: Iterable[dict]) -> None:
+    """Merge freshly imported per-account balances into the stored snapshot.
+
+    For each ``(account, currency)`` the entry with the latest ``as_of`` date
+    wins, so importing an older statement never overwrites a newer balance.
+    """
+    by_key = {(b["account"], b["currency"]): b for b in get_account_balances()}
+    for b in balances:
+        key = (b["account"], b["currency"])
+        existing = by_key.get(key)
+        if existing is None or str(b.get("as_of", "")) >= str(existing.get("as_of", "")):
+            by_key[key] = b
+    merged = sorted(by_key.values(), key=lambda b: (b["currency"], b["account"]))
+    _set_meta(_BALANCES_KEY, json.dumps(merged))
 
 
 def seed_starter_rules() -> int:
@@ -273,11 +309,16 @@ def count_transactions() -> int:
 
 
 def delete_all_transactions() -> int:
-    """Delete every transaction. Returns the number of rows removed."""
+    """Delete every transaction. Returns the number of rows removed.
+
+    Also clears the stored per-account balance snapshot, so re-importing
+    rebuilds it from scratch rather than leaving a stale figure on the dashboard.
+    """
     with get_connection() as conn:
-        before = conn.total_changes
+        removed = conn.execute("SELECT COUNT(*) FROM transactions").fetchone()[0]
         conn.execute("DELETE FROM transactions")
-        return conn.total_changes - before
+        conn.execute("DELETE FROM meta WHERE key = ?", (_BALANCES_KEY,))
+        return removed
 
 
 # --------------------------------------------------------------------------- #

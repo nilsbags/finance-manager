@@ -5,6 +5,7 @@ to narrow the editable transactions table below to exactly those rows. A
 breadcrumb lets you step back up. Search / account filters apply throughout.
 """
 
+import pandas as pd
 import plotly.express as px
 import streamlit as st
 
@@ -13,6 +14,20 @@ import charts
 import database
 import money
 import rules
+
+# Time-window switcher for this page. "All time" applies no date filter.
+TX_PERIODS = ["1M", "3M", "1Y", "All time"]
+_TX_PERIOD_MONTHS = {"1M": 1, "3M": 3, "1Y": 12}
+
+
+def _period_start(label: str) -> str | None:
+    """ISO start date for a period label, or ``None`` for the all-time view."""
+    months = _TX_PERIOD_MONTHS.get(label)
+    if months is None:
+        return None
+    start = (pd.Timestamp.today().normalize() - pd.DateOffset(months=months)).date()
+    return start.isoformat()
+
 
 st.set_page_config(
     page_title="Transactions · Finance Manager", page_icon="📂", layout="wide"
@@ -25,6 +40,12 @@ df_all = database.fetch_transactions()
 if df_all.empty:
     st.info("No transactions yet. Import a CSV on the **Import** page first.")
     st.stop()
+
+# --- Time window ----------------------------------------------------------- #
+period = st.radio(
+    "Period", TX_PERIODS, index=len(TX_PERIODS) - 1, horizontal=True, key="tx_period"
+)
+start_date = _period_start(period)
 
 # --- Filters --------------------------------------------------------------- #
 f1, f2, f3 = st.columns([2, 1, 1])
@@ -81,8 +102,10 @@ if sub:
     crumb += f"  ›  **{sub}**"
 b3.markdown(f"<div style='padding-top:0.5rem'>{crumb}</div>", unsafe_allow_html=True)
 
-# --- Base frame for the drill bars (search/account + chart currency) ------- #
-base = database.fetch_transactions(search=search or None, accounts=sel_accounts or None)
+# --- Base frame for the drill bars (period + search/account + currency) ---- #
+base = database.fetch_transactions(
+    search=search or None, accounts=sel_accounts or None, start_date=start_date
+)
 base, disp_currency = money.currency_view(base, sel_currency)
 base["volume"] = base["amount"].abs()
 
@@ -133,13 +156,15 @@ df = database.fetch_transactions(
     accounts=sel_accounts or None,
     categories=[cat] if cat else None,
     subcategories=sub_filter,
+    start_date=start_date,
 )
 
 st.divider()
 st.subheader("Transactions")
+period_note = "all time" if start_date is None else f"last {period}"
 st.caption(
-    f"Showing {len(df)} transaction(s). Edit **category**, **subcategory** and "
-    "**notes** inline, then save."
+    f"Showing {len(df)} transaction(s) · {period_note}. Edit **category**, "
+    "**subcategory** and **notes** inline, then save."
 )
 
 cat_options = sorted(set(categories.all_categories()) | set(database.distinct_values("category")))
@@ -148,6 +173,7 @@ sub_options = sorted(set(categories.all_subcategories()) | set(database.distinct
 edited = st.data_editor(
     df,
     width="stretch",
+    height=620,
     hide_index=True,
     disabled=["id", "date", "description", "amount", "account", "currency"],
     column_config={

@@ -294,7 +294,11 @@ def overview_section(
     title = {"spend": "Spendings", "earn": "Earnings"}.get(show, "Spendings vs. earnings")
     if cumulative:
         title = f"Cumulative {title.lower()}"
-    combined_note = " · converted to EUR" if selection == money.ALL_EUR else ""
+    combined_note = (
+        f" · converted to {money.base_of(selection)}"
+        if money.is_combined(selection)
+        else ""
+    )
     st.caption(f"{title} · {period} ({start:%d %b %Y} – {end:%d %b %Y}){combined_note}")
 
     # Decide whether there is anything to plot for the requested series (based on

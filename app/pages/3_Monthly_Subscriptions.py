@@ -33,9 +33,11 @@ with st.expander("Detection settings"):
         help="Lower = stricter (amounts must be more consistent).",
     )
     include_cat = c3.checkbox(
-        "Include subscription-type categories", value=True,
+        "Include subscription-type categories & names", value=True,
         help="Count merchants in Software & Subscriptions, Streaming, Phone & "
-        "Internet even when the sampled cadence looks irregular.",
+        "Internet — or whose name contains 'subscription' (e.g. 'Claude "
+        "Subscription') — even when the cadence is irregular, as long as it "
+        "stays monthly or longer (weekly/shorter charges are never counted).",
     )
     st.caption("Conversion rates below are used for the combined EUR totals.")
     money.rates_editor(df_all, key="subs_fx")

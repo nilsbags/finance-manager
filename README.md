@@ -14,6 +14,11 @@ Built with Python, [Streamlit](https://streamlit.io/), SQLite, pandas and Plotly
   account, currency), and store rows in SQLite. Re-importing the same file is
   safe: duplicates are detected via a hash of date + amount + description +
   account.
+- **Balance-based income recovery** — if your export has a running **balance**
+  column, the importer can recover money that the statement only reflects as a
+  balance jump (incoming transfers, interest, fees) rather than as its own line
+  item. The net unlisted movement is reconstructed **per account and month** and
+  added as a synthetic entry — positive months as income, negative as an outflow.
 - **Transaction management** — searchable, filterable table with inline editing
   of **category** and **notes**.
 - **Hierarchical categories** — a built-in taxonomy of top-level **categories**
@@ -27,8 +32,10 @@ Built with Python, [Streamlit](https://streamlit.io/), SQLite, pandas and Plotly
   them with monthly/yearly cost in EUR, and highlights the biggest so you can
   cancel what you don't use.
 - **Dashboard** — a quick overview with big **this-month** numbers (spendings,
-  earnings, net, savings rate) each compared to last month, a month-over-month
-  comparison chart, the spendings-vs-earnings trend, and category splits.
+  earnings, net, savings rate) each compared to last month, the **current
+  balance** per account (plus a combined total in your chosen currency), a
+  month-over-month comparison chart, the spendings-vs-earnings trend, and
+  category splits.
 - **Spendings / Earnings** — each leads with a gradient area chart (spendings or
   earnings only), switchable between **This month / 3M / 6M / 1Y / YTD**, with
   account & currency filters, followed by breakdowns by category, by month and
@@ -54,8 +61,8 @@ source .venv/bin/activate        # Windows: .venv\Scripts\activate
 # 3. Install dependencies
 pip install -r requirements.txt
 
-# 4. Run the app
-streamlit run app/main.py
+# 4. Run the app (opens on the Dashboard by default)
+streamlit run app/Dashboard.py
 ```
 
 Streamlit opens the app in your browser (usually <http://localhost:8501>).
@@ -113,7 +120,7 @@ finance-manager/
 ├── sample_data/
 │   └── transactions.csv       # example data to try the app
 └── app/
-    ├── main.py                # Streamlit entry point + overview
+    ├── Dashboard.py           # entry point + default page (KPIs, comparison, sunbursts)
     ├── database.py            # schema, migrations, transaction/rule CRUD
     ├── importer.py            # CSV parsing, column mapping, dedup hashing
     ├── categories.py          # taxonomy, colours, starter rule set
@@ -122,13 +129,12 @@ finance-manager/
     ├── rules.py               # category rule engine (category + subcategory)
     ├── charts.py              # period switcher, gradient, sunburst/treemap helpers
     └── pages/
-        ├── 1_Dashboard.py             # overview: KPIs + monthly comparison + sunbursts
-        ├── 2_Spendings.py             # cumulative chart + category/subcategory treemap
-        ├── 3_Earnings.py              # cumulative chart + category/subcategory treemap
-        ├── 4_Monthly_Subscriptions.py # detected recurring subscriptions + savings
-        ├── 5_Transactions.py          # drill-down explorer + editable table
-        ├── 6_Import.py                # upload + map columns + import
-        └── 7_Rules.py                 # categories & rules management hub
+        ├── 1_Spendings.py             # cumulative chart + category/subcategory treemap
+        ├── 2_Earnings.py              # cumulative chart + category/subcategory treemap
+        ├── 3_Monthly_Subscriptions.py # detected recurring subscriptions + savings
+        ├── 4_Transactions.py          # drill-down explorer + editable table
+        ├── 5_Import.py                # upload + map columns + import
+        └── 6_Rules.py                 # categories & rules management hub
 ```
 
 ---

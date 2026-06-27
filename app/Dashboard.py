@@ -37,6 +37,20 @@ st.markdown(
 
 st.title("📊 Dashboard")
 
+# --- Current balance (one total, shown in each currency) ------------------- #
+# Rendered first so it sits above everything else on the dashboard. It reads the
+# stored running balances and is independent of the page's currency picker.
+balances = database.get_account_balances()
+if balances:
+    rates = money.get_rates()
+    st.subheader("💰 Current balance")
+    bases = money.COMBINED_BASES  # EUR, USD, AED — same total, different currency
+    balance_cols = st.columns(len(bases))
+    for col, base in zip(balance_cols, bases):
+        total = sum(money.convert_amount(b["balance"], b["currency"], base, rates) for b in balances)
+        with col, st.container(border=True):
+            st.metric(base, f"{total:,.0f} {base}")
+
 df_all = database.fetch_transactions()
 if df_all.empty:
     st.info("No transactions yet. Import a CSV on the **Import** page first.")
@@ -119,47 +133,6 @@ with k4:
             "Savings rate",
             f"{sr_now:.0f}%" if sr_now is not None else "—",
             delta=sr_delta,
-        )
-
-# --- Current balance (from imported running balances) ---------------------- #
-balances = database.get_account_balances()
-if balances:
-    rates = money.get_rates()
-    total = sum(money.convert_amount(b["balance"], b["currency"], currency, rates) for b in balances)
-
-    def _acct_label(account: str) -> str:
-        account = str(account)
-        return f"…{account[-4:]}" if len(account) > 4 else account
-
-    st.subheader("💰 Current balance")
-    if len(balances) <= 4:
-        cols = st.columns(len(balances) + 1)
-        with cols[0], st.container(border=True):
-            st.metric(f"Total · {currency}", f"{total:,.0f} {currency}")
-        for col, b in zip(cols[1:], balances):
-            with col, st.container(border=True):
-                st.metric(
-                    f"{_acct_label(b['account'])} · {b['currency']}",
-                    f"{b['balance']:,.0f} {b['currency']}",
-                    help=f"As of {b['as_of']}",
-                )
-    else:
-        with st.container(border=True):
-            st.metric(f"Total · {currency}", f"{total:,.0f} {currency}")
-        st.dataframe(
-            pd.DataFrame(
-                [
-                    {
-                        "Account": _acct_label(b["account"]),
-                        "Currency": b["currency"],
-                        "Balance": b["balance"],
-                        "As of": b["as_of"],
-                    }
-                    for b in balances
-                ]
-            ),
-            width="stretch",
-            hide_index=True,
         )
 
 # --- Month-over-month comparison ------------------------------------------- #

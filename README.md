@@ -40,6 +40,8 @@ Built with [Next.js](https://nextjs.org/) (App Router, TypeScript), SQLite
   earnings only), switchable between **This month / 3M / 6M / 1Y / YTD**, with
   account & currency filters, followed by breakdowns by category, by month and
   by merchant/source.
+- **Dark mode by default** — toggle to light mode from the sidebar; the choice
+  is remembered locally.
 - **Private by design** — your data lives only in `data/finance.db` (gitignored).
 
 ---

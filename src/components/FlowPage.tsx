@@ -88,17 +88,17 @@ export function FlowPage({ kind }: { kind: "spend" | "earn" }) {
                 {/* Metrics */}
                 <div className="mt-6 grid gap-4 sm:grid-cols-3">
                   <Card>
-                    <div className="text-sm text-slate-500">
+                    <div className="text-sm text-slate-500 dark:text-slate-400">
                       Total {verb} ({currency})
                     </div>
                     <div className="mt-1 text-2xl font-bold">{fmtNum(total, 2)}</div>
                   </Card>
                   <Card>
-                    <div className="text-sm text-slate-500">Transactions</div>
+                    <div className="text-sm text-slate-500 dark:text-slate-400">Transactions</div>
                     <div className="mt-1 text-2xl font-bold">{fmtNum(rows.length)}</div>
                   </Card>
                   <Card>
-                    <div className="text-sm text-slate-500">
+                    <div className="text-sm text-slate-500 dark:text-slate-400">
                       Avg / transaction ({currency})
                     </div>
                     <div className="mt-1 text-2xl font-bold">{fmtNum(total / rows.length, 2)}</div>
@@ -131,9 +131,9 @@ export function FlowPage({ kind }: { kind: "spend" | "earn" }) {
 
                 {/* Top merchants / sources */}
                 <SectionTitle>{spend ? "Top merchants" : "Top sources"}</SectionTitle>
-                <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+                <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
                   <table className="w-full text-left text-sm">
-                    <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+                    <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-400">
                       <tr>
                         <th className="px-4 py-2">{spend ? "Merchant" : "Source"}</th>
                         <th className="px-4 py-2 text-right">
@@ -143,7 +143,7 @@ export function FlowPage({ kind }: { kind: "spend" | "earn" }) {
                     </thead>
                     <tbody>
                       {top.map(([description, amount]) => (
-                        <tr key={description} className="border-b border-slate-100 last:border-0">
+                        <tr key={description} className="border-b border-slate-100 last:border-0 dark:border-slate-800">
                           <td className="max-w-md truncate px-4 py-1.5" title={description}>
                             {description}
                           </td>

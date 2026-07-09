@@ -163,7 +163,7 @@ export default function TransactionsPage() {
   }
 
   const inputClass =
-    "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-slate-500 focus:outline-none";
+    "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-slate-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:focus:border-slate-400";
 
   return (
     <div>
@@ -222,7 +222,7 @@ export default function TransactionsPage() {
             ◂ {cat}
           </Button>
         )}
-        <span className="text-sm text-slate-600">
+        <span className="text-sm text-slate-600 dark:text-slate-300">
           All categories
           {cat && (
             <>
@@ -290,7 +290,7 @@ export default function TransactionsPage() {
       </div>
 
       {/* Transactions table */}
-      <hr className="mt-8 border-slate-200" />
+      <hr className="mt-8 border-slate-200 dark:border-slate-800" />
       <SectionTitle>Transactions</SectionTitle>
       <Caption>
         Showing {tableRows.length} transaction(s) ·{" "}
@@ -298,9 +298,9 @@ export default function TransactionsPage() {
         <b>subcategory</b> and <b>notes</b> inline, then save.
       </Caption>
 
-      <div className="mt-3 max-h-[620px] overflow-auto rounded-xl border border-slate-200 bg-white">
+      <div className="mt-3 max-h-[620px] overflow-auto rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
         <table className="w-full text-left text-sm">
-          <thead className="sticky top-0 border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+          <thead className="sticky top-0 border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
             <tr>
               <th className="px-3 py-2">ID</th>
               <th className="px-3 py-2">Date</th>
@@ -317,15 +317,17 @@ export default function TransactionsPage() {
             {tableRows.slice(0, visible).map((t) => {
               const edit = editOf(t);
               return (
-                <tr key={t.id} className="border-b border-slate-100 last:border-0">
-                  <td className="px-3 py-1.5 text-slate-400">{t.id}</td>
+                <tr key={t.id} className="border-b border-slate-100 last:border-0 dark:border-slate-800">
+                  <td className="px-3 py-1.5 text-slate-400 dark:text-slate-500">{t.id}</td>
                   <td className="whitespace-nowrap px-3 py-1.5">{t.date}</td>
                   <td className="max-w-xs truncate px-3 py-1.5" title={t.description}>
                     {t.description}
                   </td>
                   <td
                     className={`whitespace-nowrap px-3 py-1.5 text-right font-medium ${
-                      t.amount < 0 ? "text-red-600" : "text-green-600"
+                      t.amount < 0
+                        ? "text-red-600 dark:text-red-400"
+                        : "text-green-600 dark:text-green-400"
                     }`}
                   >
                     {fmtNum(t.amount, 2)}
@@ -334,7 +336,7 @@ export default function TransactionsPage() {
                   <td className="px-3 py-1.5">{t.currency}</td>
                   <td className="px-3 py-1.5">
                     <select
-                      className="w-40 rounded border border-slate-200 bg-white px-2 py-1 text-sm"
+                      className="w-40 rounded border border-slate-200 bg-white px-2 py-1 text-sm dark:border-slate-700 dark:bg-slate-800"
                       value={edit.category}
                       onChange={(e) => setEdit(t, { category: e.target.value })}
                     >
@@ -347,7 +349,7 @@ export default function TransactionsPage() {
                   </td>
                   <td className="px-3 py-1.5">
                     <select
-                      className="w-44 rounded border border-slate-200 bg-white px-2 py-1 text-sm"
+                      className="w-44 rounded border border-slate-200 bg-white px-2 py-1 text-sm dark:border-slate-700 dark:bg-slate-800"
                       value={edit.subcategory}
                       onChange={(e) => setEdit(t, { subcategory: e.target.value })}
                     >
@@ -362,7 +364,7 @@ export default function TransactionsPage() {
                   <td className="px-3 py-1.5">
                     <input
                       type="text"
-                      className="w-40 rounded border border-slate-200 bg-white px-2 py-1 text-sm"
+                      className="w-40 rounded border border-slate-200 bg-white px-2 py-1 text-sm dark:border-slate-700 dark:bg-slate-800"
                       value={edit.notes}
                       onChange={(e) => setEdit(t, { notes: e.target.value })}
                     />
@@ -373,7 +375,7 @@ export default function TransactionsPage() {
           </tbody>
         </table>
         {tableRows.length > visible && (
-          <div className="border-t border-slate-100 p-3 text-center">
+          <div className="border-t border-slate-100 p-3 text-center dark:border-slate-800">
             <Button onClick={() => setVisible(visible + PAGE_SIZE)}>
               Show {Math.min(PAGE_SIZE, tableRows.length - visible)} more (of{" "}
               {tableRows.length - visible} remaining)

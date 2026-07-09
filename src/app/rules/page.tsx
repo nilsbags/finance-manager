@@ -141,7 +141,7 @@ export default function RulesPage() {
         &ldquo;Apply rules now&rdquo; re-categorizes uncategorized transactions.
       </Caption>
 
-      <hr className="my-6 border-slate-200" />
+      <hr className="my-6 border-slate-200 dark:border-slate-800" />
 
       {/* Existing rules, grouped by category */}
       <SectionTitle>Existing rules</SectionTitle>
@@ -155,17 +155,17 @@ export default function RulesPage() {
                 <ColorDot color={colorFor(cat)} />
                 {cat} <span className="font-normal text-slate-400">({group.length})</span>
               </div>
-              <div className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white">
+              <div className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-900">
                 {group.map((rule) => (
                   <div key={rule.id} className="flex items-center gap-4 px-4 py-2 text-sm">
                     <div className="flex-1">
                       contains <b>&ldquo;{rule.pattern}&rdquo;</b>
                     </div>
-                    <div className="flex-1 text-slate-600">→ {rule.subcategory || "—"}</div>
+                    <div className="flex-1 text-slate-600 dark:text-slate-400">→ {rule.subcategory || "—"}</div>
                     <button
                       type="button"
                       onClick={() => removeRule(rule.id)}
-                      className="rounded-md border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-500 hover:border-red-300 hover:text-red-600"
+                      className="rounded-md border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-500 hover:border-red-300 hover:text-red-600 dark:border-slate-700 dark:text-slate-400 dark:hover:border-red-800 dark:hover:text-red-400"
                     >
                       Delete
                     </button>
@@ -190,7 +190,7 @@ export default function RulesPage() {
               <ColorDot color={colorFor(cat)} size={12} />
               {cat}
             </div>
-            <ul className="list-inside list-disc space-y-0.5 text-sm text-slate-600">
+            <ul className="list-inside list-disc space-y-0.5 text-sm text-slate-600 dark:text-slate-400">
               {subs.map((s) => (
                 <li key={s}>{s}</li>
               ))}

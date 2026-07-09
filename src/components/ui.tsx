@@ -5,7 +5,7 @@ import { useState, type ReactNode } from "react";
 /** Bordered card, the basic building block of every page. */
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <div className={`rounded-xl border border-slate-200 bg-white p-4 ${className}`}>{children}</div>
+    <div className={`rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 ${className}`}>{children}</div>
   );
 }
 
@@ -30,10 +30,14 @@ export function MetricCard({
   const good = deltaColor === "inverse" ? negative : !negative;
   const inner = (
     <div>
-      <div className="text-sm text-slate-500">{label}</div>
+      <div className="text-sm text-slate-500 dark:text-slate-400">{label}</div>
       <div className="mt-1 text-[2rem] font-bold leading-tight">{value}</div>
       {delta != null && (
-        <div className={`mt-1 text-sm font-medium ${good ? "text-green-600" : "text-red-600"}`}>
+        <div
+          className={`mt-1 text-sm font-medium ${
+            good ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
+          }`}
+        >
           {negative ? "↓" : "↑"} {delta}
         </div>
       )}
@@ -54,10 +58,10 @@ export function Expander({
 }) {
   return (
     <details
-      className="group rounded-xl border border-slate-200 bg-white open:pb-4"
+      className="group rounded-xl border border-slate-200 bg-white open:pb-4 dark:border-slate-800 dark:bg-slate-900"
       open={defaultOpen}
     >
-      <summary className="cursor-pointer select-none px-4 py-3 text-sm font-medium text-slate-700 hover:text-slate-900">
+      <summary className="cursor-pointer select-none px-4 py-3 text-sm font-medium text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white">
         {title}
       </summary>
       <div className="px-4">{children}</div>
@@ -74,9 +78,11 @@ export function Notice({
   children: ReactNode;
 }) {
   const styles = {
-    info: "border-sky-200 bg-sky-50 text-sky-900",
-    success: "border-green-200 bg-green-50 text-green-900",
-    warning: "border-amber-200 bg-amber-50 text-amber-900",
+    info: "border-sky-200 bg-sky-50 text-sky-900 dark:border-sky-900 dark:bg-sky-950 dark:text-sky-200",
+    success:
+      "border-green-200 bg-green-50 text-green-900 dark:border-green-900 dark:bg-green-950 dark:text-green-200",
+    warning:
+      "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200",
   }[kind];
   return <div className={`rounded-lg border px-4 py-3 text-sm ${styles}`}>{children}</div>;
 }
@@ -95,8 +101,10 @@ export function Button({
   type?: "button" | "submit";
 }) {
   const styles = {
-    primary: "bg-slate-900 text-white hover:bg-slate-700",
-    secondary: "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50",
+    primary:
+      "bg-slate-900 text-white hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white",
+    secondary:
+      "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700",
     danger: "bg-red-600 text-white hover:bg-red-500",
   }[variant];
   return (
@@ -114,14 +122,14 @@ export function Button({
 export function Labeled({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="block text-sm">
-      <span className="mb-1 block font-medium text-slate-600">{label}</span>
+      <span className="mb-1 block font-medium text-slate-600 dark:text-slate-400">{label}</span>
       {children}
     </label>
   );
 }
 
 const inputClass =
-  "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-slate-500 focus:outline-none";
+  "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-slate-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:focus:border-slate-400";
 
 export function Select({
   label,
@@ -192,12 +200,12 @@ export function Checkbox({
     >
       <input
         type="checkbox"
-        className="mt-0.5 h-4 w-4 accent-slate-900"
+        className="mt-0.5 h-4 w-4 accent-slate-900 dark:accent-slate-300"
         checked={checked}
         disabled={disabled}
         onChange={(e) => onChange(e.target.checked)}
       />
-      <span className="font-medium text-slate-700">{label}</span>
+      <span className="font-medium text-slate-700 dark:text-slate-300">{label}</span>
     </label>
   );
 }
@@ -213,7 +221,7 @@ export function Toggle({
   onChange: (checked: boolean) => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-slate-700">
+    <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
       <span
         role="switch"
         aria-checked={checked}
@@ -222,11 +230,11 @@ export function Toggle({
           onChange(!checked);
         }}
         className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
-          checked ? "bg-slate-900" : "bg-slate-300"
+          checked ? "bg-slate-900 dark:bg-slate-300" : "bg-slate-300 dark:bg-slate-600"
         }`}
       >
         <span
-          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform dark:bg-slate-950 ${
             checked ? "translate-x-4" : "translate-x-0.5"
           }`}
         />
@@ -257,7 +265,7 @@ export function Slider({
     <Labeled label={`${label}: ${value}`}>
       <input
         type="range"
-        className="w-full accent-slate-900"
+        className="w-full accent-slate-900 dark:accent-slate-300"
         title={help}
         value={value}
         min={min}
@@ -280,14 +288,16 @@ export function RadioPills({
   onChange: (value: string) => void;
 }) {
   return (
-    <div className="flex flex-wrap gap-1 rounded-lg bg-slate-100 p-1">
+    <div className="flex flex-wrap gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
       {options.map((opt) => (
         <button
           key={opt}
           type="button"
           onClick={() => onChange(opt)}
           className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-            value === opt ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+            value === opt
+              ? "bg-white text-slate-900 shadow-sm dark:bg-slate-950 dark:text-slate-100"
+              : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
           }`}
         >
           {opt}
@@ -313,7 +323,7 @@ export function MultiSelectChips({
     onChange(selected.includes(opt) ? selected.filter((s) => s !== opt) : [...selected, opt]);
   return (
     <div className="text-sm">
-      <span className="mb-1 block font-medium text-slate-600">{label}</span>
+      <span className="mb-1 block font-medium text-slate-600 dark:text-slate-400">{label}</span>
       <div className="flex flex-wrap gap-1.5">
         {options.map((opt) => {
           const active = selected.includes(opt);
@@ -324,8 +334,8 @@ export function MultiSelectChips({
               onClick={() => toggle(opt)}
               className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
                 active
-                  ? "border-slate-900 bg-slate-900 text-white"
-                  : "border-slate-300 bg-white text-slate-600 hover:border-slate-500"
+                  ? "border-slate-900 bg-slate-900 text-white dark:border-slate-100 dark:bg-slate-100 dark:text-slate-900"
+                  : "border-slate-300 bg-white text-slate-600 hover:border-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-slate-400"
               }`}
             >
               {opt}
@@ -341,7 +351,7 @@ export function Tabs({ tabs }: { tabs: { label: string; content: ReactNode }[] }
   const [active, setActive] = useState(0);
   return (
     <div>
-      <div className="mb-4 flex gap-4 border-b border-slate-200">
+      <div className="mb-4 flex gap-4 border-b border-slate-200 dark:border-slate-800">
         {tabs.map((tab, i) => (
           <button
             key={tab.label}
@@ -349,8 +359,8 @@ export function Tabs({ tabs }: { tabs: { label: string; content: ReactNode }[] }
             onClick={() => setActive(i)}
             className={`-mb-px border-b-2 px-1 pb-2 text-sm font-medium transition-colors ${
               i === active
-                ? "border-slate-900 text-slate-900"
-                : "border-transparent text-slate-500 hover:text-slate-800"
+                ? "border-slate-900 text-slate-900 dark:border-slate-100 dark:text-slate-100"
+                : "border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
             }`}
           >
             {tab.label}
@@ -371,5 +381,5 @@ export function SectionTitle({ children }: { children: ReactNode }) {
 }
 
 export function Caption({ children }: { children: ReactNode }) {
-  return <p className="text-sm text-slate-500">{children}</p>;
+  return <p className="text-sm text-slate-500 dark:text-slate-400">{children}</p>;
 }

@@ -33,7 +33,7 @@ export function RatesEditor({
           <Labeled key={cur} label={`1 ${cur} = ? EUR`}>
             <input
               type="number"
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-slate-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:focus:border-slate-400"
               min={0}
               step={0.01}
               value={rates[cur] ?? DEFAULT_RATES[cur] ?? 1.0}

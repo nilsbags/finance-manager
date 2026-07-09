@@ -234,7 +234,7 @@ export default function ImportPage() {
         <input
           type="file"
           accept=".csv"
-          className="block w-full max-w-md cursor-pointer rounded-lg border border-slate-300 bg-white text-sm text-slate-600 file:mr-3 file:cursor-pointer file:rounded-l-lg file:border-0 file:bg-slate-100 file:px-4 file:py-2.5 file:text-sm file:font-medium"
+          className="block w-full max-w-md cursor-pointer rounded-lg border border-slate-300 bg-white text-sm text-slate-600 file:mr-3 file:cursor-pointer file:rounded-l-lg file:border-0 file:bg-slate-100 file:px-4 file:py-2.5 file:text-sm file:font-medium dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:file:bg-slate-700 dark:file:text-slate-200"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
         />
       </div>
@@ -270,9 +270,9 @@ export default function ImportPage() {
             columns.length > 0 && (
               <>
                 <SectionTitle>Preview</SectionTitle>
-                <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+                <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
                   <table className="w-full text-left text-sm">
-                    <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+                    <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-400">
                       <tr>
                         {columns.map((c) => (
                           <th key={c} className="whitespace-nowrap px-3 py-2">{c}</th>
@@ -281,7 +281,7 @@ export default function ImportPage() {
                     </thead>
                     <tbody>
                       {preview.map((row, i) => (
-                        <tr key={i} className="border-b border-slate-100 last:border-0">
+                        <tr key={i} className="border-b border-slate-100 last:border-0 dark:border-slate-800">
                           {columns.map((c) => (
                             <td key={c} className="whitespace-nowrap px-3 py-1.5">{row[c]}</td>
                           ))}
@@ -374,7 +374,7 @@ export default function ImportPage() {
                       <Expander title={`Show ${result.skipped.length} skipped row(s)`}>
                         <div className="overflow-x-auto">
                           <table className="w-full text-left text-sm">
-                            <thead className="border-b border-slate-200 text-xs uppercase text-slate-500">
+                            <thead className="border-b border-slate-200 text-xs uppercase text-slate-500 dark:border-slate-700 dark:text-slate-400">
                               <tr>
                                 <th className="px-3 py-2">Reason</th>
                                 {columns.map((c) => (
@@ -384,8 +384,8 @@ export default function ImportPage() {
                             </thead>
                             <tbody>
                               {result.skipped.map((row, i) => (
-                                <tr key={i} className="border-b border-slate-100 last:border-0">
-                                  <td className="whitespace-nowrap px-3 py-1.5 text-red-600">{row._reason}</td>
+                                <tr key={i} className="border-b border-slate-100 last:border-0 dark:border-slate-800">
+                                  <td className="whitespace-nowrap px-3 py-1.5 text-red-600 dark:text-red-400">{row._reason}</td>
                                   {columns.map((c) => (
                                     <td key={c} className="whitespace-nowrap px-3 py-1.5">{row[c]}</td>
                                   ))}

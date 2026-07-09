@@ -4,7 +4,8 @@ A small, **local-first** personal spending tracker. Import bank-account CSV
 files, categorize transactions, and view monthly spending summaries — all on
 your own machine. **No external APIs, no network calls, no cloud.**
 
-Built with Python, [Streamlit](https://streamlit.io/), SQLite, pandas and Plotly.
+Built with [Next.js](https://nextjs.org/) (App Router, TypeScript), SQLite
+(better-sqlite3), Tailwind CSS and [ECharts](https://echarts.apache.org/).
 
 ---
 
@@ -33,9 +34,8 @@ Built with Python, [Streamlit](https://streamlit.io/), SQLite, pandas and Plotly
   cancel what you don't use.
 - **Dashboard** — a quick overview with big **this-month** numbers (spendings,
   earnings, net, savings rate) each compared to last month, the **current
-  balance** per account (plus a combined total in your chosen currency), a
-  month-over-month comparison chart, the spendings-vs-earnings trend, and
-  category splits.
+  balance** shown in EUR/USD/AED, a month-over-month comparison chart, the
+  spendings-vs-earnings trend, and category splits.
 - **Spendings / Earnings** — each leads with a gradient area chart (spendings or
   earnings only), switchable between **This month / 3M / 6M / 1Y / YTD**, with
   account & currency filters, followed by breakdowns by category, by month and
@@ -46,26 +46,32 @@ Built with Python, [Streamlit](https://streamlit.io/), SQLite, pandas and Plotly
 
 ## Setup
 
-Requires **Python 3.12+** (the code uses modern syntax such as the `type`
-statement from [PEP 695](https://peps.python.org/pep-0695/) and `X | None`
-union types). Developed and tested against **Python 3.14**.
+Requires **Node.js 20+**.
 
 ```bash
 # 1. Clone and enter the project
 cd finance-manager
 
-# 2. Create and activate a virtual environment
-python3.14 -m venv .venv         # or any python >= 3.12
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
+# 2. Install dependencies
+npm install
 
-# 3. Install dependencies
-pip install -r requirements.txt
-
-# 4. Run the app (opens on the Dashboard by default)
-streamlit run app/Dashboard.py
+# 3. Run the dev server (opens on the Dashboard by default)
+npm run dev
 ```
 
-Streamlit opens the app in your browser (usually <http://localhost:8501>).
+Open <http://localhost:3000> in your browser. For a production build:
+
+```bash
+npm run build && npm start
+```
+
+The SQLite database is created automatically at `data/finance.db` on first
+run; set the `FINANCE_DB` environment variable to use a different file
+(useful for tests / multiple profiles).
+
+> **Migrating from the Python/Streamlit version?** Nothing to do — the schema
+> and dedup hashes are unchanged, so the app picks up your existing
+> `data/finance.db` (transactions, rules, balances, FX rates) as-is.
 
 ---
 
@@ -76,7 +82,7 @@ Streamlit opens the app in your browser (usually <http://localhost:8501>).
 2. Confirm the column mapping — the app auto-detects common column names — and
    click **Import transactions**.
 3. Open **⚙️ Rules** and add a rule, e.g. contains `BILLA` → `Groceries`,
-   then **Apply rules to existing transactions**.
+   then **Apply rules now**.
 4. Explore the **📊 Dashboard** and edit individual rows under **📂 Transactions**.
 
 ---
@@ -84,9 +90,9 @@ Streamlit opens the app in your browser (usually <http://localhost:8501>).
 ## Categories & rules
 
 Categories are organised as **category › subcategory** (the full taxonomy lives
-in `app/categories.py` and is shown on the **Categories & Rules** page). On first
-run the app seeds a large **starter rule set** that maps common merchants to a
-category and subcategory automatically during import.
+in `src/lib/categories.ts` and is shown on the **Categories & Rules** page). On
+first run the app seeds a large **starter rule set** that maps common merchants
+to a category and subcategory automatically during import.
 
 - **Drill down** on the **Transactions** page: click a category bar to expand it
   into subcategories, click a subcategory, and the editable table below narrows
@@ -114,27 +120,40 @@ category and subcategory automatically during import.
 ```
 finance-manager/
 ├── README.md
-├── requirements.txt
+├── package.json
+├── next.config.ts
 ├── .gitignore
 ├── data/                      # SQLite database (created on first run, gitignored)
 ├── sample_data/
 │   └── transactions.csv       # example data to try the app
-└── app/
-    ├── Dashboard.py           # entry point + default page (KPIs, comparison, sunbursts)
-    ├── database.py            # schema, migrations, transaction/rule CRUD
-    ├── importer.py            # CSV parsing, column mapping, dedup hashing
-    ├── categories.py          # taxonomy, colours, starter rule set
-    ├── money.py               # manual FX rates + combined "All → EUR" view
-    ├── subscriptions.py       # recurring monthly-charge detection
-    ├── rules.py               # category rule engine (category + subcategory)
-    ├── charts.py              # period switcher, gradient, sunburst/treemap helpers
-    └── pages/
-        ├── 1_Spendings.py             # cumulative chart + category/subcategory treemap
-        ├── 2_Earnings.py              # cumulative chart + category/subcategory treemap
-        ├── 3_Monthly_Subscriptions.py # detected recurring subscriptions + savings
-        ├── 4_Transactions.py          # drill-down explorer + editable table
-        ├── 5_Import.py                # upload + map columns + import
-        └── 6_Rules.py                 # categories & rules management hub
+└── src/
+    ├── lib/                   # framework-free core logic
+    │   ├── db.ts              # schema, migrations, transaction/rule CRUD (server-only)
+    │   ├── categories.ts      # taxonomy, colours, starter rule set
+    │   ├── rules.ts           # category rule engine (category + subcategory)
+    │   ├── csv.ts             # CSV value parsing + column auto-detection
+    │   ├── importer.ts        # row normalisation, dedup hashing, balance recovery
+    │   ├── money.ts           # manual FX rates + combined "All → EUR" views
+    │   ├── subscriptions.ts   # recurring monthly-charge detection
+    │   ├── analytics.ts       # period ranges, time-series bucketing, groupings
+    │   └── format.ts          # number formatting + shared colours
+    ├── components/
+    │   ├── charts/            # ECharts wrappers (gradient area, sunburst, treemap, bars)
+    │   ├── OverviewSection.tsx# shared period/account/currency controls + chart
+    │   ├── FlowPage.tsx       # the shared Spendings/Earnings page body
+    │   ├── RatesEditor.tsx    # manual FX-rate editor
+    │   ├── Sidebar.tsx        # navigation
+    │   ├── useFinanceData.ts  # client data hook (transactions + rates)
+    │   └── ui.tsx             # small UI kit (cards, metrics, inputs, tabs, …)
+    └── app/
+        ├── page.tsx           # 📊 Dashboard (KPIs, comparison, sunbursts)
+        ├── spendings/         # 🛒 cumulative chart + category/subcategory treemap
+        ├── earnings/          # 💰 cumulative chart + category/subcategory treemap
+        ├── subscriptions/     # 🔁 detected recurring subscriptions + savings
+        ├── transactions/      # 📂 drill-down explorer + editable table
+        ├── import/            # 📥 upload + map columns + import
+        ├── rules/             # ⚙️ categories & rules management hub
+        └── api/               # transactions, import, rules, rates, balances
 ```
 
 ---

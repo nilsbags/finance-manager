@@ -3,29 +3,30 @@
 import { useEffect, useMemo, useState } from "react";
 import dayjs from "dayjs";
 
-import { categoryBreakdown, monthlyTotals } from "@/lib/analytics";
+import { aggregateTimeseries, monthLabel, monthLabelLong, monthlyTotals } from "@/lib/analytics";
 import { fmtMoney, fmtNum, fmtSigned } from "@/lib/format";
 import { COMBINED_BASES, convertAmount, currencyOptions, currencyView } from "@/lib/money";
 import type { AccountBalance } from "@/lib/types";
-import { HierarchyChart } from "@/components/charts/HierarchyChart";
+import { GradientAreaChart } from "@/components/charts/GradientAreaChart";
 import { GroupedBarChart } from "@/components/charts/GroupedBarChart";
-import { OverviewSection } from "@/components/OverviewSection";
 import { RatesEditor } from "@/components/RatesEditor";
 import { useFinanceData } from "@/components/useFinanceData";
-import {
-  Caption,
-  Card,
-  MetricCard,
-  Notice,
-  PageTitle,
-  SectionTitle,
-  Select,
-} from "@/components/ui";
+import { Caption, MetricCard, Notice, PageTitle, SectionTitle, Select } from "@/components/ui";
+
+interface MonthlyRow {
+  month: string; // YYYY-MM
+  spend: number;
+  income: number;
+  net: number;
+  savingsRate: number | null;
+  count: number;
+}
 
 export default function DashboardPage() {
   const { transactions, rates, saveRates, loading } = useFinanceData();
   const [balances, setBalances] = useState<AccountBalance[]>([]);
   const [selection, setSelection] = useState<string | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/balances")
@@ -37,23 +38,47 @@ export default function DashboardPage() {
   const options = useMemo(() => currencyOptions(all), [all]);
   const sel = selection ?? options[0] ?? "EUR";
 
-  const [curDf, currency] = useMemo(
-    () => currencyView(all, sel, rates),
-    [all, sel, rates],
-  );
-  const monthly = useMemo(() => monthlyTotals(curDf), [curDf]);
+  const [curDf, currency] = useMemo(() => currencyView(all, sel, rates), [all, sel, rates]);
 
-  // --- This-month vs last-month figures ---------------------------------- //
+  // Per-month spendings / earnings / net / savings rate / count, newest first.
+  const monthlyRows = useMemo<MonthlyRow[]>(() => {
+    const map = new Map<string, { spend: number; income: number; count: number }>();
+    for (const t of curDf) {
+      const m = t.date.slice(0, 7);
+      const e = map.get(m) ?? { spend: 0, income: 0, count: 0 };
+      if (t.amount < 0) e.spend += -t.amount;
+      else if (t.amount > 0) e.income += t.amount;
+      e.count += 1;
+      map.set(m, e);
+    }
+    return [...map.entries()]
+      .map(([month, v]) => ({
+        month,
+        spend: v.spend,
+        income: v.income,
+        net: v.income - v.spend,
+        savingsRate: v.income > 0 ? ((v.income - v.spend) / v.income) * 100 : null,
+        count: v.count,
+      }))
+      .sort((a, b) => b.month.localeCompare(a.month));
+  }, [curDf]);
+
+  const byMonth = useMemo(() => new Map(monthlyRows.map((r) => [r.month, r])), [monthlyRows]);
+
+  // The chart follows the table selection; default to the newest month with data.
+  const effectiveMonth = selectedMonth ?? monthlyRows[0]?.month ?? dayjs().format("YYYY-MM");
+
+  // --- KPI cards: this calendar month vs last (independent of the selection). #
   const thisMonth = dayjs().format("YYYY-MM");
   const lastMonth = dayjs().subtract(1, "month").format("YYYY-MM");
-  const val = (month: string, col: "spend" | "income") =>
-    monthly.find((m) => m.month === month)?.[col] ?? 0;
-  const hasPrev = monthly.some((m) => m.month === lastMonth);
+  const kThis = byMonth.get(thisMonth);
+  const kLast = byMonth.get(lastMonth);
+  const hasPrev = byMonth.has(lastMonth);
 
-  const spendNow = val(thisMonth, "spend");
-  const spendPrev = val(lastMonth, "spend");
-  const earnNow = val(thisMonth, "income");
-  const earnPrev = val(lastMonth, "income");
+  const spendNow = kThis?.spend ?? 0;
+  const spendPrev = kLast?.spend ?? 0;
+  const earnNow = kThis?.income ?? 0;
+  const earnPrev = kLast?.income ?? 0;
   const netNow = earnNow - spendNow;
   const netPrev = earnPrev - spendPrev;
   const srNow = earnNow > 0 ? (netNow / earnNow) * 100 : null;
@@ -61,6 +86,15 @@ export default function DashboardPage() {
 
   const moneyDelta = (now: number, prev: number) =>
     hasPrev ? `${fmtSigned(now - prev)} ${currency}` : null;
+
+  // Grouped bar chart across all months (ascending).
+  const monthlyAsc = useMemo(() => monthlyTotals(curDf), [curDf]);
+
+  // Daily spendings & earnings for the selected month.
+  const monthSeries = useMemo(() => {
+    const monthTx = curDf.filter((t) => t.date.slice(0, 7) === effectiveMonth);
+    return aggregateTimeseries(monthTx, "D");
+  }, [curDf, effectiveMonth]);
 
   if (loading) return <PageTitle>📊 Dashboard</PageTitle>;
 
@@ -114,7 +148,7 @@ export default function DashboardPage() {
               label="Spendings"
               value={fmtMoney(spendNow, currency)}
               delta={moneyDelta(spendNow, spendPrev)}
-              deltaColor="inverse" // spending more is "bad"
+              deltaColor="inverse"
             />
             <MetricCard
               label="Earnings"
@@ -139,54 +173,74 @@ export default function DashboardPage() {
 
           {/* Month-over-month comparison */}
           <SectionTitle>Spendings vs. earnings by month</SectionTitle>
-          {monthly.length <= 1 ? (
+          {monthlyAsc.length <= 1 ? (
             <Caption>Not enough months of data yet to compare.</Caption>
           ) : (
-            <GroupedBarChart byMonth={monthly} currency={currency} />
+            <GroupedBarChart byMonth={monthlyAsc} currency={currency} />
           )}
 
-          {/* Trend (period switcher + gradient chart) */}
-          <SectionTitle>Trend</SectionTitle>
-          <OverviewSection
-            transactions={all}
-            show="both"
-            currencySelection={sel}
-            rates={rates}
-            onSaveRates={saveRates}
-          >
-            {(df, cur) => {
-              const expenses = df.filter((t) => t.amount < 0);
-              const income = df.filter((t) => t.amount > 0);
-              return (
-                <div className="mt-8 grid gap-6 lg:grid-cols-2">
-                  <Card>
-                    <h3 className="mb-2 text-lg font-semibold">Spending by category</h3>
-                    {expenses.length === 0 ? (
-                      <Caption>No spending in this period.</Caption>
-                    ) : (
-                      <HierarchyChart
-                        breakdown={categoryBreakdown(expenses, (t) => Math.abs(t.amount))}
-                        currency={cur}
-                        kind="sunburst"
-                      />
-                    )}
-                  </Card>
-                  <Card>
-                    <h3 className="mb-2 text-lg font-semibold">Earnings by category</h3>
-                    {income.length === 0 ? (
-                      <Caption>No earnings in this period.</Caption>
-                    ) : (
-                      <HierarchyChart
-                        breakdown={categoryBreakdown(income, (t) => t.amount)}
-                        currency={cur}
-                        kind="sunburst"
-                      />
-                    )}
-                  </Card>
-                </div>
-              );
-            }}
-          </OverviewSection>
+          {/* Selected month's spendings & earnings */}
+          <SectionTitle>Spendings &amp; earnings — {monthLabelLong(effectiveMonth)}</SectionTitle>
+          {monthSeries.length === 0 ? (
+            <Caption>No transactions in {monthLabelLong(effectiveMonth)}.</Caption>
+          ) : (
+            <GradientAreaChart data={monthSeries} currency={currency} show="both" />
+          )}
+
+          {/* Monthly breakdown table (drives the chart above) */}
+          <SectionTitle>Monthly breakdown</SectionTitle>
+          <Caption>Select a month to see its spendings and earnings in the chart above.</Caption>
+          <div className="mt-3 overflow-x-auto rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-400">
+                <tr>
+                  <th className="px-4 py-2">Month</th>
+                  <th className="px-4 py-2 text-right">Spendings ({currency})</th>
+                  <th className="px-4 py-2 text-right">Earnings ({currency})</th>
+                  <th className="px-4 py-2 text-right">Net ({currency})</th>
+                  <th className="px-4 py-2 text-right">Savings rate</th>
+                  <th className="px-4 py-2 text-right">Transactions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {monthlyRows.map((row) => {
+                  const selectedRow = row.month === effectiveMonth;
+                  return (
+                    <tr
+                      key={row.month}
+                      onClick={() => setSelectedMonth(row.month)}
+                      className={`cursor-pointer border-b border-slate-100 last:border-0 dark:border-slate-800 ${
+                        selectedRow
+                          ? "bg-slate-100 font-medium dark:bg-slate-800"
+                          : "hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                      }`}
+                    >
+                      <td className="whitespace-nowrap px-4 py-2">{monthLabel(row.month)}</td>
+                      <td className="px-4 py-2 text-right text-red-600 dark:text-red-400">
+                        {fmtNum(row.spend, 2)}
+                      </td>
+                      <td className="px-4 py-2 text-right text-green-600 dark:text-green-400">
+                        {fmtNum(row.income, 2)}
+                      </td>
+                      <td
+                        className={`px-4 py-2 text-right ${
+                          row.net < 0
+                            ? "text-red-600 dark:text-red-400"
+                            : "text-green-600 dark:text-green-400"
+                        }`}
+                      >
+                        {fmtNum(row.net, 2)}
+                      </td>
+                      <td className="px-4 py-2 text-right">
+                        {row.savingsRate !== null ? `${fmtNum(row.savingsRate)}%` : "—"}
+                      </td>
+                      <td className="px-4 py-2 text-right">{row.count}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </>
       )}
     </div>

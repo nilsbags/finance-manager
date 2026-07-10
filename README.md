@@ -34,12 +34,9 @@ Built with [Next.js](https://nextjs.org/) (App Router, TypeScript), SQLite
   cancel what you don't use.
 - **Dashboard** — a quick overview with big **this-month** numbers (spendings,
   earnings, net, savings rate) each compared to last month, the **current
-  balance** shown in EUR/USD/AED, a month-over-month comparison chart, the
-  spendings-vs-earnings trend, and category splits.
-- **Spendings / Earnings** — each leads with a gradient area chart (spendings or
-  earnings only), switchable between **This month / 3M / 6M / 1Y / YTD**, with
-  account & currency filters, followed by breakdowns by category, by month and
-  by merchant/source.
+  balance** shown in EUR/USD/AED, a month-over-month comparison chart, and a
+  **monthly breakdown table**. Selecting a month in the table shows that
+  month's spendings and earnings in the chart above it.
 - **Dark mode by default** — toggle to light mode from the sidebar; the choice
   is remembered locally.
 - **Private by design** — your data lives only in `data/finance.db` (gitignored).
@@ -140,17 +137,14 @@ finance-manager/
     │   ├── analytics.ts       # period ranges, time-series bucketing, groupings
     │   └── format.ts          # number formatting + shared colours
     ├── components/
-    │   ├── charts/            # ECharts wrappers (gradient area, sunburst, treemap, bars)
-    │   ├── OverviewSection.tsx# shared period/account/currency controls + chart
-    │   ├── FlowPage.tsx       # the shared Spendings/Earnings page body
+    │   ├── charts/            # ECharts wrappers (gradient area, grouped/horizontal bars)
     │   ├── RatesEditor.tsx    # manual FX-rate editor
     │   ├── Sidebar.tsx        # navigation
+    │   ├── ThemeProvider.tsx  # dark/light theme state + toggle
     │   ├── useFinanceData.ts  # client data hook (transactions + rates)
     │   └── ui.tsx             # small UI kit (cards, metrics, inputs, tabs, …)
     └── app/
-        ├── page.tsx           # 📊 Dashboard (KPIs, comparison, sunbursts)
-        ├── spendings/         # 🛒 cumulative chart + category/subcategory treemap
-        ├── earnings/          # 💰 cumulative chart + category/subcategory treemap
+        ├── page.tsx           # 📊 Dashboard (KPIs, comparison, monthly table + per-month chart)
         ├── subscriptions/     # 🔁 detected recurring subscriptions + savings
         ├── transactions/      # 📂 drill-down explorer + editable table
         ├── import/            # 📥 upload + map columns + import

@@ -7,8 +7,6 @@ import { useTheme } from "./ThemeProvider";
 
 const NAV = [
   { href: "/", icon: "📊", label: "Dashboard" },
-  { href: "/spendings", icon: "🛒", label: "Spendings" },
-  { href: "/earnings", icon: "💰", label: "Earnings" },
   { href: "/subscriptions", icon: "🔁", label: "Monthly Subscriptions" },
   { href: "/transactions", icon: "📂", label: "Transactions" },
   { href: "/import", icon: "📥", label: "Import" },

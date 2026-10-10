@@ -1,11 +1,14 @@
-# Python
-__pycache__/
-*.py[cod]
+# Node / Next.js
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+npm-debug.log*
+
+# Stray local Python venvs from the pre-migration era (untracked junk)
 .venv/
 venv/
-env/
-.mypy_cache/
-.pytest_cache/
 
 # Local database / private financial data — never commit this
 data/*.db
@@ -17,8 +20,11 @@ data/*.sqlite3
 *.csv
 !sample_data/transactions.csv
 
-# Streamlit
-.streamlit/secrets.toml
+# Claude Code local files
+.claude/
+
+# Environment files
+.env*
 
 # OS
 .DS_Store
